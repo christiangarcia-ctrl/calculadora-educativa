@@ -1388,54 +1388,61 @@ function exportCSV(){
   a.click();URL.revokeObjectURL(a.href);
 }
 
-async function prepararPDF(){
+function esChrome(){
+  const ua=navigator.userAgent;
+  return /Chrome/.test(ua) && !/Chromium/.test(ua) && !/Edg/.test(ua) && !/OPR/.test(ua);
+}
+
+function esSafari(){
+  const ua=navigator.userAgent;
+  return /Safari/.test(ua) && !/Chrome/.test(ua);
+}
+
+function prepararPDF(){
   actualizarReporteBase();
-  const btn=$('printBtn');
-  const textoOriginal=btn.textContent;
-  btn.disabled=true;
-  btn.textContent='⏳ Generando PDF...';
-  document.body.style.overflow='hidden';
 
-  try{
-    const reportView=document.querySelector('.report-view');
-    reportView.classList.add('pdf-export-active');
+  if(!esChrome()){
+    // Mostrar aviso para navegadores distintos a Chrome
+    const aviso=document.createElement('div');
+    aviso.id='avisoNavegador';
+    aviso.style.cssText=`
+      position:fixed;top:0;left:0;width:100%;height:100%;
+      background:rgba(0,0,0,.6);z-index:999999;
+      display:flex;align-items:center;justify-content:center;
+    `;
+    aviso.innerHTML=`
+      <div style="background:#fff;border-radius:12px;padding:32px;max-width:420px;width:90%;font-family:sans-serif;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+        <div style="font-size:2.5rem;margin-bottom:12px">⚠️</div>
+        <h2 style="margin:0 0 12px;font-size:1.15rem;color:#1a2b4b">Para mejor resultado usa Google Chrome</h2>
+        <p style="color:#555;font-size:.9rem;line-height:1.5;margin:0 0 20px">
+          El PDF se genera con el motor de impresión del navegador.<br>
+          <strong>En Chrome el resultado es perfecto</strong> (2 páginas limpias).<br><br>
+          En Safari puede generar páginas en blanco adicionales.
+        </p>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+          <button id="btnAvisoCancelar" style="padding:10px 20px;border:2px solid #ccc;background:#fff;border-radius:8px;cursor:pointer;font-size:.9rem">Cancelar</button>
+          <button id="btnAvisoContinuar" style="padding:10px 20px;border:none;background:#b8860b;color:#fff;border-radius:8px;cursor:pointer;font-size:.9rem">Continuar de todos modos</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(aviso);
 
-    // Esperar a que el navegador aplique estilos/layout/imagenes
-    await new Promise(r=>setTimeout(r,300));
-
-    const pages=reportView.querySelectorAll('.pdf-page');
-    const pdf=new jspdf.jsPDF({unit:'mm',format:'a4',orientation:'portrait'});
-    const pageWmm=210, pageHmm=297;
-
-    for(let i=0;i<pages.length;i++){
-      const canvas=await html2canvas(pages[i],{
-        scale:2,
-        useCORS:true,
-        backgroundColor:'#ffffff',
-        width:794,
-        height:1123,
-        windowWidth:794,
-        windowHeight:1123
-      });
-      const imgData=canvas.toDataURL('image/jpeg',0.95);
-      if(i>0) pdf.addPage();
-      pdf.addImage(imgData,'JPEG',0,0,pageWmm,pageHmm);
-    }
-
-    reportView.classList.remove('pdf-export-active');
-
-    const nombre=(reportState.nombre||'cliente').trim().replace(/\s+/g,'_');
-    const regimenSlug=reportState.regimenFiscal==='93'?'Art93':reportState.regimenFiscal==='151'?'Art151':'SinRegimen';
-    pdf.save(`Plan_${nombre}_${regimenSlug}.pdf`);
-  }catch(error){
-    console.error(error);
-    alert('Hubo un problema al generar el PDF.');
-    document.querySelector('.report-view').classList.remove('pdf-export-active');
-  }finally{
-    document.body.style.overflow='';
-    btn.disabled=false;
-    btn.textContent=textoOriginal;
+    document.getElementById('btnAvisoCancelar').onclick=()=>aviso.remove();
+    document.getElementById('btnAvisoContinuar').onclick=()=>{
+      aviso.remove();
+      ejecutarPrint();
+    };
+  } else {
+    ejecutarPrint();
   }
+}
+
+function ejecutarPrint(){
+  const nombre=(reportState.nombre||'cliente').trim();
+  const regimen=reportState.regimenFiscal==='93'?'Art. 93':reportState.regimenFiscal==='151'?'Art. 151':'Sin régimen';
+  const tituloOriginal=document.title;
+  document.title=`Plan de ${nombre} - ${regimen} · Christian GarBa`;
+  setTimeout(()=>{window.print();setTimeout(()=>{document.title=tituloOriginal;},2000);},250);
 }
 
 $('pmt').addEventListener('input',()=>{userEditedPMT=true;linkWhatsApp();});
