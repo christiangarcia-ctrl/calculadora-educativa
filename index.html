@@ -697,7 +697,19 @@ td{padding:8px;border-bottom:1px solid #edf2f7;color:#334155;font-weight:600;}
       </div>
       <div class="comp-note" id="compMessage">—</div>
 
+      <!-- Impacto de reinversión de ISR -->
+      <div class="card" id="isrInsightCard" style="display:none;margin-bottom:16px">
+        <div class="card-head"><h3>💰 Impacto de reinvertir tu devolución de ISR</h3><span>Art. 151</span></div>
+        <div class="card-body" style="padding:12px">
+          <div class="side-param"><span>Devolución fiscal estimada del primer año</span><strong id="taxFirstAmount">—</strong></div>
+          <div class="side-param"><span>Impacto acumulado a los 65 por reinvertir el ISR</span><strong id="isrImpacto65">—</strong></div>
+          <div class="side-param"><span>Crecimiento atribuible a esa reinversión</span><strong id="isrCrecimiento">—</strong></div>
+          <div class="side-note">La reinversión fiscal estimada se calcula año con año durante el periodo de aportaciones, no como un pago único al final. Se asume que cada devolución estimada de ISR se reinvierte al fondo y permanece invertida hasta los 65 años. Esta lectura es ilustrativa y no representa garantía de devolución, rendimiento ni asesoría fiscal personalizada.</div>
+        </div>
+      </div>
+
       <!-- Gráfica -->
+
       <div class="results-grid">
         <div class="card">
           <div class="card-head"><h3>Crecimiento estimado del fondo año a año</h3><span id="yearsPlan">—</span></div>
@@ -890,6 +902,16 @@ td{padding:8px;border-bottom:1px solid #edf2f7;color:#334155;font-weight:600;}
       </div>
       <div class="pdf-note" id="rptCompMessage">—</div>
 
+      <!-- Impacto de reinversión de ISR -->
+      <div class="pdf-fiscal-note" id="rptISRNoteCard" style="display:none">
+        <div class="pdf-fiscal-note-title">💰 Impacto de reinvertir tu devolución de ISR</div>
+        <div class="pdf-fiscal-note-text">
+          Impacto acumulado a los 65 años: <strong id="rptISRImpacto65">—</strong> ·
+          Crecimiento atribuible: <strong id="rptISRCrecimiento">—</strong>
+        </div>
+        <div class="pdf-fiscal-note-text" id="rptISRNota">—</div>
+      </div>
+
       <!-- Nota fiscal -->
       <div class="pdf-fiscal-note" id="rptFiscalNote">
         <div class="pdf-fiscal-note-title">⚖️ Tratamiento fiscal contemplado por ley</div>
@@ -979,6 +1001,8 @@ const reportState = {
   rRet:7,yrsRet:20,totalAportado:0,rendimiento:0,fondoPlan:0,fondo65:0,
   fondo60:null,benefFiscal:0,ingresoMensual:0,tasaRealMes:0,
   regimenFiscal:'ninguno',isrPct:0,edadFinPlan:0,yearsGrowth:0,
+  devolucionFiscalPrimerAno:0,impactoISR65:0,rendimientoISRReinvertido:0,
+  fondoPlanSinISR:0,fondo65SinISR:0,
   cash:0,cashReal:0,bank:0,bankReal:0,afore:0,ingreso60:0
 };
 
@@ -1088,8 +1112,8 @@ function calcAccum(){
   const yrsAport=Math.min(years,yrsTo65);
   const yrsExtra=Math.max(0,yrsTo65-yrsAport);
   const i=rate/freq;
-  let saldo=lump,totalAportado=lump,benefFiscal=0,edadAct=edad,pmtYear=pmt0;
-  let fondoPlan=lump,fondo60=edad<60?null:saldo;
+  let saldo=lump,saldoSinISR=lump,totalAportado=lump,benefFiscal=0,edadAct=edad,pmtYear=pmt0;
+  let fondoPlan=lump,fondoPlanSinISR=lump,fondo60=edad<60?null:saldo,fondo60SinISR=edad<60?null:saldoSinISR;
   const tbody=$('tbody');
   tbody.innerHTML='';
   const totalYearsSim=yrsAport+yrsExtra;
@@ -1099,13 +1123,13 @@ function calcAccum(){
     let aportAno=0,benefAno=0;
     if(yr<=yrsAport){
       if(yr>1) pmtYear*=(1+infl);
-      for(let k=0;k<freq;k++){saldo*=(1+i);saldo+=pmtYear;aportAno+=pmtYear;totalAportado+=pmtYear;}
+      for(let k=0;k<freq;k++){saldo*=(1+i);saldo+=pmtYear;saldoSinISR*=(1+i);saldoSinISR+=pmtYear;aportAno+=pmtYear;totalAportado+=pmtYear;}
       if(regimen==='151'&&reinv&&isrPct>0){benefAno=aportAno*isrPct;saldo+=benefAno;benefFiscal+=benefAno;}
     } else {
-      for(let k=0;k<freq;k++) saldo*=(1+i);
+      for(let k=0;k<freq;k++){saldo*=(1+i);saldoSinISR*=(1+i);}
     }
-    if(yr===yrsAport) fondoPlan=saldo;
-    if(fondo60===null&&edadAct>=60) fondo60=saldo;
+    if(yr===yrsAport){fondoPlan=saldo;fondoPlanSinISR=saldoSinISR;}
+    if(fondo60===null&&edadAct>=60){fondo60=saldo;fondo60SinISR=saldoSinISR;}
     chartLabels.push(`Año ${yr}`);
     chartData.push(saldo);
     const tr=document.createElement('tr');
@@ -1114,20 +1138,36 @@ function calcAccum(){
     tbody.appendChild(tr);
   }
   const fondo65=saldo;
+  const fondo65SinISR=saldoSinISR;
   const rendimiento=fondo65-totalAportado;
   const edadFinPlan=edad+yrsAport;
+  const aportacionAnualPrimerAno=pmt0*12;
+  const devolucionFiscalPrimerAno=regimen==='151'&&reinv?Math.max(0,aportacionAnualPrimerAno*isrPct):0;
+  const impactoISR65=Math.max(0,fondo65-fondo65SinISR);
+  const rendimientoISRReinvertido=Math.max(0,impactoISR65-benefFiscal);
   reportState.nombre=($('nombreOpt').value||'').trim();
   reportState.edad=edad;reportState.planYears=yrsAport;reportState.selectedYears=years;
   reportState.totalAportado=totalAportado;reportState.rendimiento=rendimiento;
   reportState.fondoPlan=fondoPlan;reportState.fondo65=fondo65;reportState.fondo60=fondo60;
   reportState.benefFiscal=benefFiscal;reportState.regimenFiscal=regimen;
   reportState.isrPct=isrPct*100;reportState.edadFinPlan=edadFinPlan;reportState.yearsGrowth=yrsExtra;
+  reportState.devolucionFiscalPrimerAno=devolucionFiscalPrimerAno;
+  reportState.impactoISR65=impactoISR65;reportState.rendimientoISRReinvertido=rendimientoISRReinvertido;
+  reportState.fondoPlanSinISR=fondoPlanSinISR;reportState.fondo65SinISR=fondo65SinISR;
   $('clientNameResult').textContent=reportState.nombre||'cliente';
   $('pvRet').value=String(fondo65);
   const casoEtapas=edadFinPlan<60?'Caso A · termina antes de los 60':edadFinPlan<65?'Caso B · termina entre 60 y 65':'Caso C · corte ilustrativo a los 65';
   const es93=regimen==='93',es151=regimen==='151';
   const sb=$('scenarioBadge');
   if(sb) sb.textContent=`${casoEtapas} · fin estimado: ${Math.round(edadFinPlan)} años`;
+  const mostrarISR=es151&&reinv&&benefFiscal>0&&impactoISR65>0;
+  const isrCard=$('isrInsightCard');
+  if(isrCard) isrCard.style.display=mostrarISR?'block':'none';
+  if(mostrarISR){
+    if($('taxFirstAmount')) $('taxFirstAmount').textContent=money(devolucionFiscalPrimerAno);
+    if($('isrImpacto65')) $('isrImpacto65').textContent=money(impactoISR65);
+    if($('isrCrecimiento')) $('isrCrecimiento').textContent=money(rendimientoISRReinvertido);
+  }
   $('keyFondoPlan').textContent=money(fondo65);
   $('keyEdadPlan').textContent=edadFinPlan<65?`Capital proyectado a los 65 · fin estimado del periodo a los ${Math.round(edadFinPlan)} años`:'Capital proyectado a los 65 · corte ilustrativo de simulación';
   $('totalAportado').textContent=money(totalAportado);
@@ -1371,6 +1411,14 @@ function actualizarReporteBase(){
   if(fnEl) fnEl.style.display=(es93||es151)?'':'none';
   if(es93) set('rptFiscalText','El Art. 93 de la Ley del ISR contempla un tratamiento fiscal preferente para ciertos seguros de retiro a partir de los 60 años, siempre que se cumplan los requisitos fiscales y contractuales aplicables. Esta simulación no representa asesoría fiscal personalizada ni garantía de exención.');
   else if(es151) set('rptFiscalText','El Art. 151 de la Ley del ISR puede permitir la deducción de aportaciones a planes personales de retiro, conforme a límites, requisitos y situación fiscal del contribuyente.');
+  const rptISRCard=$('rptISRNoteCard');
+  const mostrarISRRpt=es151&&reportState.benefFiscal>0&&reportState.impactoISR65>0;
+  if(rptISRCard) rptISRCard.style.display=mostrarISRRpt?'':'none';
+  if(mostrarISRRpt){
+    set('rptISRImpacto65',money(reportState.impactoISR65));
+    set('rptISRCrecimiento',money(reportState.rendimientoISRReinvertido));
+    set('rptISRNota',`La reinversión fiscal estimada se calcula año con año durante el periodo de aportaciones, no como un pago único al final. En este escenario se asume que cada devolución estimada de ISR se reinvierte al fondo y permanece invertida hasta los 65 años. Por eso, el impacto proyectado (${money(reportState.impactoISR65)}) puede ser mayor que el ISR reinvertido nominalmente (${money(reportState.benefFiscal)}), ya que incluye un crecimiento estimado atribuible de ${money(reportState.rendimientoISRReinvertido)}. Esta lectura es ilustrativa y no representa garantía de devolución, rendimiento ni asesoría fiscal personalizada.`);
+  }
   else if($('rptFiscalNote')) $('rptFiscalNote').style.display='none';
 }
 
