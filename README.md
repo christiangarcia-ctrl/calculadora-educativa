@@ -76,3 +76,21 @@ Generación independiente de las cuatro capturas: páginas de 360 × 640 puntos,
 
 ## Valores iniciales y alternativas ilustrativas
 Tasa bruta inicial de 10% anual efectiva, editable y no garantizada. Incremento de aportación de 4% anual activado inicialmente, editable o desactivable; se aplica cada año sobre la aportación del año anterior. Son supuestos de la corrida y no tasas prometidas por Allianz. Las sugerencias de portafolios reutilizan las categorías visibles en el simulador oficial de educación: Pesos (Conservador, Balanceado, Dinámico, Revaluables), Dólares y Euros (Conservador, Balanceado, Dinámico), Dedicados (BRIC, China, Brasil, Oro, Mercados Emergentes). Confirmar disponibilidad en la Guía de Inversión; no se modelan rendimientos independientes ni fluctuaciones cambiarias.
+
+## MVP de presentaciones locales · 16/10/2026
+
+Educación utiliza las 10 páginas originales de `Building_Their_Educational_Future.pdf`;
+Plus utiliza las 13 diapositivas de `Presentacion-PPR-OptiMaxx-Ascender-Editable.pptx`.
+Las páginas se sirven como JPEG de 1920 px, sin iframe ni solicitudes a Canva.
+`assets/slides/sources.json` registra los archivos originales, sus SHA-256 y el número de páginas.
+El PowerPoint se convirtió con LibreOffice y ambos documentos se rasterizaron con Poppler;
+se conservan el diseño y el contenido original, incluidas sus afirmaciones comerciales.
+Esta integración no constituye una nueva validación de esas afirmaciones.
+
+`presentation.js` y `presentation.css` comparten el visor, con botones y flechas de teclado.
+Educación: páginas 1–9 → Tus números → página 10 → propuesta.
+Plus: páginas 1–10 → Tus números → páginas 11–13 → propuesta.
+Las calculadoras continúan siendo páginas locales integradas. Modificar un dato obliga
+a recalcular antes de guardar. La propuesta lee los campos `input` y `result` del
+cálculo guardado. No se añadió login, multiusuario, backend ni análisis con IA.
+La transcripción se carga como texto y el asesor revisa/completa manualmente los campos.

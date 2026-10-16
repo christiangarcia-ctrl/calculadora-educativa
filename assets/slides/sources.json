@@ -1,0 +1,14 @@
+[
+  {
+    "source": "Building_Their_Educational_Future.pdf",
+    "sha256": "560430f0eda2691043127e7c3f625febe86ee043d29d6a54209c0f847074f171",
+    "pages": 10,
+    "assets": "assets/slides/education/slide-NN.jpg"
+  },
+  {
+    "source": "Presentacion-PPR-OptiMaxx-Ascender-Editable.pptx",
+    "sha256": "0247a94a6aeca1cffb866f3c7bc6c0fb9f2ffde50406446f2763ca8a9fb515d5",
+    "pages": 13,
+    "assets": "assets/slides/plus/slide-NN.jpg"
+  }
+]
