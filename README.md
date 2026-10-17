@@ -93,4 +93,19 @@ Plus: páginas 1–10 → Tus números → páginas 11–13 → propuesta.
 Las calculadoras continúan siendo páginas locales integradas. Modificar un dato obliga
 a recalcular antes de guardar. La propuesta lee los campos `input` y `result` del
 cálculo guardado. No se añadió login, multiusuario, backend ni análisis con IA.
-La transcripción se carga como texto y el asesor revisa/completa manualmente los campos.
+El asesor copia el prompt y lo pega en su GPT junto con la transcripción de la reunión.
+Después pega la respuesta en Ascender y revisa los campos importados antes de generar la propuesta.
+
+
+## Puente manual con el GPT del asesor
+
+La pantalla de propuesta ofrece “Copiar prompt para mi GPT” y “Importar información”.
+El prompt incluye el cálculo guardado y exige una respuesta JSON breve con siete campos.
+Si el portapapeles no está disponible, se muestra el prompt seleccionado para copiarlo manualmente.
+`proposal-gpt.js` valida formato, tipos, longitudes, producto y referencia del cálculo
+antes de rellenar los campos; nunca modifica el escenario guardado ni importa cifras al motor.
+Los campos siguen editables y una edición invalida la vista previa anterior.
+Ascender no realiza solicitudes a proveedores de IA ni almacena claves.
+El uso del GPT y la transcripción ocurre en la cuenta que elija el asesor.
+
+Verificación del contrato de intercambio: `node tests/proposal-gpt.test.cjs`.
