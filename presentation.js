@@ -1,9 +1,10 @@
 (() => {
   const {product,folder,before,total}=document.body.dataset;
   const split=Number(before), count=Number(total), $=id=>document.getElementById(id);
-  let page=1, step='slides';
+  let page=1, step='slides',renderVersion=0;
   const source=n=>`assets/slides/${folder}/slide-${String(n).padStart(2,'0')}.jpg`;
   function show(nextStep, nextPage) {
+    const version=++renderVersion;
     step=nextStep;
     if(nextPage) page=nextPage;
     $('deck').hidden=step==='calc'; $('calc').hidden=step!=='calc';
@@ -14,8 +15,12 @@
     });
     if(step==='calc') return;
     $('loadError').hidden=true;
-    $('slide').src=source(page);
-    $('slide').alt=`${product} · diapositiva original ${page} de ${count}`;
+    const personal=folder==='plus'&&page===2;
+    if(personal){
+      $('slide').hidden=true;
+      AdvisorSlide.render(source(page),AscenderSession.getAdvisor()||{}).then(src=>{if(version===renderVersion){$('slide').src=src;$('slide').hidden=false}}).catch(()=>{if(version===renderVersion){$('loadError').hidden=false}});
+    }else{$('slide').hidden=false;$('slide').src=source(page)}
+    $('slide').alt=personal?'Quiénes somos · '+(AscenderSession.getAdvisor()?.name||'Perfil de asesor'):`${product} · diapositiva original ${page} de ${count}`;
     $('counter').textContent=`${page} / ${count}`;
     $('prev').disabled=page===1;
     $('next').textContent=page===split?'Tus números →':page===count?'Finalizar asesoría →':'Siguiente →';

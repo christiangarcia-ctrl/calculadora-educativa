@@ -109,3 +109,22 @@ Ascender no realiza solicitudes a proveedores de IA ni almacena claves.
 El uso del GPT y la transcripción ocurre en la cuenta que elija el asesor.
 
 Verificación del contrato de intercambio: `node tests/proposal-gpt.test.cjs`.
+
+## Perfil local del asesor
+
+En `index.html`, “Mi perfil de asesor” permite guardar foto con recorte, nombre,
+WhatsApp y, por separado, titular, número, tipo e imagen de la cédula CNSF.
+Admite JPG/PNG/WebP de hasta 12 MB y reduce las imágenes antes de guardarlas.
+El perfil se conserva únicamente en el almacenamiento de este navegador;
+“Editar mi perfil” en el inicio permite actualizarlo o retirar las imágenes.
+No hay sincronización entre dispositivos, cuentas ni cargas al repositorio.
+
+La página 2 de Plus compone el diseño original con la identidad configurada,
+sin mostrar la identidad fija anterior cuando falta el perfil. En la propuesta,
+la foto acompaña al asesor y la cédula aparece junto al siguiente paso.
+Las imágenes del perfil no se copian a cálculos ni al prompt para GPT.
+La aplicación muestra la información introducida, sin verificar la cédula.
+
+Verificado con imágenes sintéticas: carga, recorte, persistencia al recargar,
+edición, eliminación, formatos inválidos, vista móvil, diapositiva personalizada
+sin datos de otra persona y propuesta A4 de cuatro páginas.

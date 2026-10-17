@@ -1,8 +1,11 @@
 window.AscenderSession={
   saveAdvisor(data){
-    const advisor={name:(data?.name||'').trim(),phone:(data?.phone||'').trim(),updatedAt:new Date().toISOString()};
+    const previous=this.getAdvisor()||{};
+    const advisor={...previous,name:(data?.name||'').trim(),phone:(data?.phone||'').trim(),updatedAt:new Date().toISOString()};
+    for(const key of ['photo','credentialImage','credentialHolder','credentialNumber','credentialRole'])if(data&&Object.hasOwn(data,key))advisor[key]=data[key];
     localStorage.setItem('ascenderAdvisor',JSON.stringify(advisor));
-    sessionStorage.setItem('ascenderAdvisor',JSON.stringify(advisor));
+    // A single browser-local copy keeps image storage bounded.
+    sessionStorage.removeItem('ascenderAdvisor');
     return advisor;
   },
   getAdvisor(){
@@ -13,7 +16,7 @@ window.AscenderSession={
   },
   saveCalculation(data){
     const advisor=this.getAdvisor();
-    const payload={...data,advisor:advisor||data?.advisor||null,savedAt:new Date().toISOString()};
+    const payload={...data,advisor:advisor?{name:advisor.name,phone:advisor.phone}:(data?.advisor||null),savedAt:new Date().toISOString()};
     localStorage.setItem('ascenderSavedCalculation',JSON.stringify(payload));
     sessionStorage.setItem('ascenderSavedCalculation',JSON.stringify(payload));
     return payload;
@@ -26,7 +29,7 @@ window.AscenderSession={
     sessionStorage.removeItem('ascenderSavedCalculation');
   },
   saveMeetingProfile(data){
-    const payload={...(data||{}),advisor:this.getAdvisor(),updatedAt:new Date().toISOString()};
+    const payload={...(data||{}),advisor:(()=>{const a=this.getAdvisor();return a?{name:a.name,phone:a.phone}:null})(),updatedAt:new Date().toISOString()};
     sessionStorage.setItem('ascenderMeetingProfile',JSON.stringify(payload));
     localStorage.setItem('ascenderMeetingProfile',JSON.stringify(payload));
     return payload;
